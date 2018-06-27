@@ -44,11 +44,12 @@ What third-party libraries or other tools does the system use? How did you choos
 
 How long did you spend on this exercise? If you had unlimited more time to spend on this, how would you spend it and how would you prioritize each item?
 - I spent approximately 4-6 hours.
-- The first thing I considered was pre-loading the lines of the file into the cache using a background thread when
-    the application first started.
-- However I was conservative with my cache maximum (10000) to avoid running out of memory,
-    so only loading the first 10k lines of a very large file wouldn't be too valuable.
-- Secondly I considered using a Redis instance to hold the cached lines, though I wasn't sure if that
+- One approach to improve performance would be to preload the file into the cache when the application starts up, in the background.
+- Another approach might be to break down the file into 'chunks' of 10k lines each during startup, and calculate which chunk file
+    a requested line lives in based on the provided line number. That would reduce the number of lines we need to read to a max of 10k.
+- A similiar preloading approach could be to get the byte position of each newline in the file during startup,
+    then use a mapping of line number to byte position to retrieve a desired line via RandomAccessFile, which should be much faster.
+- I considered using a Redis instance to hold the cached lines, though I wasn't sure if that
     would go against the request that I not load the whole file into a database.
 - I could have also spent more time finding and testing against sample large text files.
 - The REST endpoint is very simple but I could have used Swagger to produce documentation for it.
