@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service("RandomAccessLinesService")
@@ -38,6 +39,7 @@ public class RandomAccessLinesServiceImpl implements LinesService {
 
     @PostConstruct
     public void loadFileLineEndings() {
+        LOGGER.debug("Beginning preload of file...");
         // read through the bytes of a file.
         // whenever we encounter a line ending, just \n, mark down the byte position
         // of the line ending in lineEndingsList.
@@ -73,11 +75,15 @@ public class RandomAccessLinesServiceImpl implements LinesService {
                 // seek to the first char of the next line (our desired line)
                 randomAccessFile.seek(startPos + 1);
             }
-            // read and return the rest of the line.
-            return Optional.of(randomAccessFile.readLine());
+            // read and return the rest of the line, if there is one.
+            String line = randomAccessFile.readLine();
+            if (Objects.nonNull(line)) {
+                return Optional.of(line);
+            }
         } catch (IOException e) {
             LOGGER.error("Failed to read from file: {}", e.getMessage(), e);
-            return Optional.empty();
         }
+
+        return Optional.empty();
     }
 }

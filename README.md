@@ -11,12 +11,19 @@
 - If a value for the given index is in the cache, it will be returned immediately, and the implementation
     com.bjohnson.lineserver.service.RandomAccessLinesServiceImpl will not be invoked.
 - Otherwise the implementation will run.
+- com.bjohnson.lineserver.service.RandomAccessLinesServiceImpl works by preloading the file during start up.
+- This yields a list of Integers that correspond to byte positions in the file holding newlines.
+- Then, the getLineAtIndex operation uses RandomAccessFile to seek to the end of the previous line from
+    the desired index. The desired line is then read and returned.
 - The result is then cached for any subsequent request for the same index.
 - LinesController outputs the retrieved line with a 200 HTTP status code, or a HTTP 413 status if no line was retrieved.
 - To build and run the application you'll need Java 8 available on your PATH.
 
 #### How will your system perform with a 1 GB file? a 10 GB file? a 100 GB file?
-- TBD: Need to reassess.
+- The preloading time is linear with the size of the file and depends on your disk speed.
+- Once that is completed, RandomAccessFile is able to seek to the desired line very quickly in response to
+    requests.
+- On a 2GB file, requests for lines anywhere in the file were coming back in 5ms or less for me.
 
 #### How will your system perform with 100 users? 10000 users? 1000000 users?
 - In application.properties I configured the Tomcat max connections to 10000.
@@ -32,8 +39,7 @@
 - I used https://start.spring.io/ to create a skeleton project to start with.
 - I reviewed a few articles such as http://www.baeldung.com/java-read-lines-large-file and
     https://dzone.com/articles/how-to-read-a-big-csv-file-with-java-8-and-stream to find the best approach in Java.
-- I also looked into how you'd approach this problem in Ruby and it looks like the approach would
-    be fairly similar.
+- These approaches didn't provide enough performance so I looked into usage of java.io.RandomAccessFile.
 
 #### What third-party libraries or other tools does the system use? How did you choose each library or framework you used?
 - I used Java with Spring Boot, as well as Spring Web and Spring Cache, to start with
@@ -43,11 +49,11 @@
 
 #### How long did you spend on this exercise? If you had unlimited more time to spend on this, how would you spend it and how would you prioritize each item?
 - I spent approximately 4-6 hours.
-- One approach to improve performance would be to preload the file into the cache when the application starts up, in the background.
-- Another approach might be to break down the file into 'chunks' of 10k lines each during startup, and calculate which chunk file
+- If we had infinite memory or a separate instance (Redis) to hold the cache, we could load each line of the file
+    into that cache during preloading and avoid file IO during requests entirely. I assumed we have memory constraints
+    that make this unfeasible for a 100 GB file.
+- Another approach I considered was be to break down the file into 'chunks' of 10k lines each during startup, and calculate which chunk file
     a requested line lives in based on the provided line number. That would reduce the number of lines we need to read to a max of 10k.
-- A similiar preloading approach could be to get the byte position of each newline in the file during startup,
-    then use a mapping of line number to byte position to retrieve a desired line via RandomAccessFile, which should be much faster.
 - I considered using a Redis instance to hold the cached lines, though I wasn't sure if that
     would go against the request that I not load the whole file into a database.
 - I could have also spent more time finding and testing against sample large text files.
