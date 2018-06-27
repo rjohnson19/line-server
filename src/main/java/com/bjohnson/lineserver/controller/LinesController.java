@@ -2,6 +2,7 @@ package com.bjohnson.lineserver.controller;
 
 import com.bjohnson.lineserver.service.LinesService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,7 +25,8 @@ public class LinesController {
      * @param linesService Implementation of LinesService to use. Normally injected by Spring.
      */
     @Autowired
-    public LinesController(final LinesService linesService) {
+    public LinesController(
+            @Qualifier("RandomAccessLinesService") final LinesService linesService) {
         this.linesService = linesService;
     }
 

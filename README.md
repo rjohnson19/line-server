@@ -9,22 +9,14 @@
     for a particular index of the file.
 - This is passed to the LinesService, which is proxied by Spring due to the @Cacheable annotation.
 - If a value for the given index is in the cache, it will be returned immediately, and the implementation
-    com.bjohnson.lineserver.service.LinesServiceImpl will not be invoked.
-- Otherwise the implementation will run, which opens the file, reads through the lines of the file using a Java 8 Stream,
-    skipping to the desired index, and returning the line, or an empty result if the index was negative or
-    exceeded the total lines in the file.
+    com.bjohnson.lineserver.service.RandomAccessLinesServiceImpl will not be invoked.
+- Otherwise the implementation will run.
 - The result is then cached for any subsequent request for the same index.
 - LinesController outputs the retrieved line with a 200 HTTP status code, or a HTTP 413 status if no line was retrieved.
 - To build and run the application you'll need Java 8 available on your PATH.
 
 #### How will your system perform with a 1 GB file? a 10 GB file? a 100 GB file?
-- The approach I went with needs to read from the start of the file to the desired index.
-- So if all you need is the first few lines it performs very quickly.
-- I was able to retrieve the first line of a 2.21 GB file of English books in around 200ms.
-- Retrieving the last line of this file takes 5 seconds on my MacBook Pro with an SSD.
-- If you request an index that you've previously retrieved and it is in the cache, it takes 50ms or less.
-- So the worst cases for 1GB would be roughly 2.5 seconds, 10GB 25 seconds, and 100GB 250 seconds,
-    or O(n) linear time.
+- TBD: Need to reassess.
 
 #### How will your system perform with 100 users? 10000 users? 1000000 users?
 - In application.properties I configured the Tomcat max connections to 10000.
@@ -34,6 +26,7 @@
 - If we exceed the maximum connections available the request will wait for the next connection to become available,
     resulting in a delay.
 - Performance may degrade if IO access to the file by multiple users becomes a bottleneck.
+- Another problem may occur if we exceed the maximum open file handles allowed by the operating system.
 
 #### What documentation, websites, papers, etc did you consult in doing this assignment?
 - I used https://start.spring.io/ to create a skeleton project to start with.

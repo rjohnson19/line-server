@@ -29,7 +29,8 @@ public class LinesServiceTest {
             FileUtils.copyInputStreamToFile(testFileInputStream, tempFile);
         }
 
-        linesService = new LinesServiceImpl(tempFile.getPath());
+        linesService = new RandomAccessLinesServiceImpl(tempFile.getPath());
+        ((RandomAccessLinesServiceImpl) linesService).loadFileLineEndings();
     }
 
     @After
